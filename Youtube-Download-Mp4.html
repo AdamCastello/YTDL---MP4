@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BT - MP4 · YouTube Downloader</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/icon.webp" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0f1e;
+            font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: #eef4ff;
+        }
+
+        .main-mode {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 30px;
+            overflow-y: auto;
+        }
+
+        .brand {
+            margin-bottom: 25px;
+        }
+
+        .brand h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(120deg, #e0f2fe, #a5d8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
+        }
+
+        .brand p {
+            color: #9aa8c9;
+            border-left: 3px solid #7ec8ff;
+            padding-left: 16px;
+            margin-top: 6px;
+        }
+
+        .downloader-card {
+            background: #111b2e;
+            border-radius: 36px;
+            border: 1px solid #2a3d62;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px -15px #00000080;
+        }
+
+        .link-section {
+            margin-bottom: 25px;
+        }
+
+        .link-label {
+            display: block;
+            margin-bottom: 12px;
+            color: #b6ceff;
+            font-size: 1.1rem;
+        }
+
+        /* Grup input dengan desain baru: input fleksibel, tombol paste persegi kecil */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .link-input-wrapper {
+            flex: 1;
+            background: #101827;
+            border-radius: 60px;
+            padding: 4px 4px 4px 24px;
+            border: 1px solid #2c3a5a;
+            transition: 0.15s;
+        }
+
+        .link-input-wrapper:focus-within {
+            border-color: #7ec8ff;
+            box-shadow: 0 0 0 4px rgba(126, 200, 255, 0.2);
+        }
+
+        .link-input-wrapper input {
+            background: transparent;
+            border: none;
+            padding: 16px 0;
+            font-size: 1.1rem;
+            color: #f0f4ff;
+            width: 100%;
+            outline: none;
+            font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
+        }
+
+        .link-input-wrapper input::placeholder {
+            color: #4d6085;
+        }
+
+        /* Tombol paste baru: ukuran kecil, persegi dengan border 12px */
+        .paste-btn {
+            background: #7ec8ff20;
+            border: 1.5px solid #7ec8ff;
+            color: #7ec8ff;
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            line-height: 1;
+            font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
+        }
+
+        .paste-btn:hover {
+            background: #7ec8ff;
+            color: #0a0f1e;
+            transform: scale(1.02);
+        }
+
+        /* Hapus bagian saran, contoh, suggestion */
+        .suggestions, .example-link, .suggestion-btn {
+            display: none;
+        }
+
+        .download-btn-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0 20px;
+        }
+
+        .download-main-btn {
+            background: #7ec8ff;
+            border: none;
+            color: #0a0f1e;
+            font-weight: 700;
+            padding: 16px 48px;
+            border-radius: 60px;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.15s;
+            border: 1px solid #a3d8ff;
+            font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
+        }
+
+        .download-main-btn:hover {
+            background: #9fd3ff;
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(126, 200, 255, 0.4);
+        }
+
+        .download-main-btn:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .status-area {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 28px;
+            padding: 20px;
+            text-align: center;
+            color: #7f92bb;
+            border: 1px dashed #2f3e62;
+            margin-top: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .status-area.success {
+            color: #7ec8ff;
+            border-color: #7ec8ff60;
+            background: rgba(126, 200, 255, 0.05);
+        }
+
+        .status-area.error {
+            color: #ff9f9f;
+            border-color: #ff6e6e80;
+            background: rgba(255, 100, 100, 0.05);
+        }
+
+        .status-area.warning {
+            color: #ffd966;
+            border-color: #ffd96680;
+            background: rgba(255, 217, 102, 0.05);
+        }
+
+        .info-card {
+            background: #1a253c;
+            border-radius: 30px;
+            padding: 15px;
+            margin-top: 10px;
+            border: 1px solid #384f78;
+            width: 100%;
+            text-align: left;
+        }
+
+        .info-title {
+            color: #7ec8ff;
+            font-weight: 600;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+
+        .info-detail {
+            color: #b5ceff;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #1f375b;
+            border-top: 3px solid #7ec8ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .countdown-timer {
+            color: #7ec8ff;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        /* FOOTER BARU: tanpa border, dua baris rapi */
+        .footer-info {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            border: none;
+            padding-top: 18px;
+        }
+
+        .credit-line {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            color: #b2c9ff;
+            font-size: 1rem;
+            flex-wrap: wrap;
+            background: transparent;
+            border: none;
+        }
+
+        .credit-line span {
+            background: transparent;
+            border: none;
+            padding: 0;
+            color: #9cb2e0;
+        }
+
+        .credit-line .heart {
+            color: #ff7b9c;
+            display: inline-block;
+            animation: heartbeat 1.5s ease infinite;
+            padding: 0 2px;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .floater {
+            text-align: center;
+            color: #7f95c2;
+            font-size: 0.95rem;
+            background: transparent;
+            border: none;
+            letter-spacing: 0.5px;
+            padding: 4px 0;
+        }
+
+        .floater span, .floater i {
+            color: #7ec8ff;
+            font-style: normal;
+            background: transparent;
+        }
+
+        .floater i {
+            color: #a78bfa;
+        }
+
+        .footer-info div, .footer-info span, .footer-info i {
+            border: none;
+            box-shadow: none;
+        }
+
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: row;
+            }
+            .paste-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 1.3rem;
+            }
+            .credit-line {
+                gap: 10px;
+                flex-direction: row;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-mode">
+        <div class="brand">
+            <h1>BT - MP4</h1>
+            <p>🎬 Download video MP4 dari YouTube</p>
+        </div>
+
+        <div class="downloader-card">
+            <div class="link-section">
+                <div class="link-label">🔗 Masukkan link YouTube:</div>
+                <div class="input-group">
+                    <div class="link-input-wrapper">
+                        <input type="text" id="youtubeLink" placeholder="https://www.youtube.com/watch?v=..." value="">
+                    </div>
+                    <button class="paste-btn" id="pasteBtn" title="Tempel dari clipboard">📋</button>
+                </div>
+            </div>
+
+            <div class="download-btn-container">
+                <button class="download-main-btn" id="downloadBtn">
+                    <span>⬇️</span> Download MP4
+                </button>
+            </div>
+
+            <div class="status-area" id="statusArea">
+                💡 Masukkan link YouTube, lalu klik Download
+            </div>
+        </div>
+
+        <div class="footer-info">
+            <div class="credit-line">
+                <span>Dibuat dengan <span class="heart">❤</span> • DimzNotDev</span>
+                <span>Est • 2K25 - 2K26</span>
+            </div>
+            <div class="floater">
+                <span>©DimzNotDev</span> × <i>HeyTysh!</i>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const MP4_API = 'https://api.deline.web.id/downloader/ytmp4?url=';
+
+            const linkInput = document.getElementById('youtubeLink');
+            const pasteBtn = document.getElementById('pasteBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const statusArea = document.getElementById('statusArea');
+
+            // Fungsi untuk validasi semua format link YouTube
+            function isValidYoutubeUrl(url) {
+                if (!url) return false;
+                
+                // Pattern untuk semua format YouTube
+                const patterns = [
+                    // Format standar youtube.com
+                    /^(https?:\/\/)?(www\.)?(youtube\.com|m\.youtube\.com|youtu\.be)\//,
+                    /^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=[\w-]{11}(&\S*)?$/,
+                    /^(https?:\/\/)?(www\.)?youtu\.be\/[\w-]{11}(\\?\S*)?$/,
+                    /^(https?:\/\/)?(www\.)?youtube\.com\/embed\/[\w-]{11}(\\?\S*)?$/,
+                    /^(https?:\/\/)?(www\.)?youtube\.com\/shorts\/[\w-]{11}(\\?\S*)?$/,
+                    /^(https?:\/\/)?(www\.)?youtube\.com\/live\/[\w-]{11}(\\?\S*)?$/,
+                    /^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=[\w-]{11}/,
+                    // Format dengan parameter tambahan
+                    /^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=[\w-]{11}&list=[\w-]+/,
+                    /^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=[\w-]{11}&t=\d+s?/,
+                    /^(https?:\/\/)?(www\.)?youtube\.com\/shorts\/[\w-]{11}\?si=[\w-]+/,
+                    /^(https?:\/\/)?music\.youtube\.com\/watch\?v=[\w-]{11}/,
+                    /^(https?:\/\/)?(www\.)?youtube-nocookie\.com\/embed\/[\w-]{11}/
+                ];
+                
+                return patterns.some(pattern => pattern.test(url));
+            }
+
+            // Extract video ID dari berbagai format URL
+            function extractVideoId(url) {
+                if (!url) return null;
+                
+                const patterns = [
+                    // Format umum
+                    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/,
+                    /youtube\.com\/embed\/([\w-]{11})/,
+                    /youtube\.com\/shorts\/([\w-]{11})/,
+                    /youtube\.com\/live\/([\w-]{11})/,
+                    /youtube\.com\/watch\?v=([\w-]{11})/,
+                    /youtu\.be\/([\w-]{11})/,
+                    /youtube\.com\/v\/([\w-]{11})/,
+                    /youtube-nocookie\.com\/embed\/([\w-]{11})/,
+                    /music\.youtube\.com\/watch\?v=([\w-]{11})/,
+                    // Regex untuk menangkap video ID dari URL dengan parameter
+                    /[?&]v=([\w-]{11})/
+                ];
+                
+                for (let pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match && match[1]) return match[1];
+                }
+                
+                return null;
+            }
+
+            // Bersihkan URL dari parameter tambahan
+            function normalizeYoutubeUrl(url) {
+                if (!url) return null;
+                
+                const videoId = extractVideoId(url);
+                if (videoId) {
+                    return `https://www.youtube.com/watch?v=${videoId}`;
+                }
+                
+                // Jika URL sudah dalam format yang benar, return as-is
+                return url;
+            }
+
+            async function pasteFromClipboard() {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (text) {
+                        linkInput.value = text;
+                        statusArea.textContent = '✅ Link berhasil ditempel!';
+                        statusArea.className = 'status-area success';
+                    } else {
+                        statusArea.textContent = '⚠️ Clipboard kosong';
+                        statusArea.className = 'status-area error';
+                    }
+                } catch (err) {
+                    console.error('Gagal membaca clipboard:', err);
+                    statusArea.innerHTML = '❌ Tidak bisa mengakses clipboard.<br>Paste manual (Ctrl+V)';
+                    statusArea.className = 'status-area error';
+                }
+            }
+
+            // Fungsi untuk menampilkan countdown
+            function startCountdown(seconds, message, downloadUrl) {
+                let counter = seconds;
+                statusArea.innerHTML = `
+                    <div>${message}</div>
+                    <div class="countdown-timer">⏳ Membuka tab download dalam ${counter} detik...</div>
+                `;
+                
+                const interval = setInterval(() => {
+                    counter--;
+                    if (counter > 0) {
+                        const countdownElement = document.querySelector('.countdown-timer');
+                        if (countdownElement) {
+                            countdownElement.textContent = `⏳ Membuka tab download dalam ${counter} detik...`;
+                        }
+                    } else {
+                        clearInterval(interval);
+                        window.open(downloadUrl, '_blank');
+                        statusArea.innerHTML = `
+                            <div class="info-card">
+                                <div class="info-title">✅ Download dimulai!</div>
+                                <div style="margin-top: 10px; color: #7ec8ff;">Tab download telah dibuka</div>
+                            </div>
+                        `;
+                    }
+                }, 1000);
+            }
+
+            // Fungsi utama download
+            async function handleDownload() {
+                let url = linkInput.value.trim();
+
+                if (!url) {
+                    statusArea.textContent = '⚠️ Masukkan link YouTube terlebih dahulu';
+                    statusArea.className = 'status-area error';
+                    return;
+                }
+
+                if (!isValidYoutubeUrl(url)) {
+                    statusArea.innerHTML = `❌ Link YouTube tidak valid.<br><small>${url}</small>`;
+                    statusArea.className = 'status-area error';
+                    return;
+                }
+
+                const normalizedUrl = normalizeYoutubeUrl(url);
+                const videoId = extractVideoId(normalizedUrl);
+                
+                downloadBtn.disabled = true;
+                
+                statusArea.innerHTML = '<span class="spinner"></span> Menghubungi server...';
+                statusArea.className = 'status-area';
+
+                try {
+                    const apiUrl = `${MP4_API}${encodeURIComponent(normalizedUrl)}`;
+                    console.log('Fetching:', apiUrl);
+                    
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+
+                    console.log('Respons API:', data);
+
+                    // Cek berbagai kemungkinan struktur respons API
+                    if (data.status === true) {
+                        // Cari data video di berbagai kemungkinan path
+                        const videoData = data.data || data.result || data;
+                        
+                        // Ambil judul dari berbagai kemungkinan field
+                        const title = videoData.title || 
+                                     videoData.judul || 
+                                     videoData.videoTitle || 
+                                     'Video YouTube';
+                        
+                        // Ambil download URL dari berbagai kemungkinan field
+                        const downloadUrl = videoData.url || 
+                                           videoData.download || 
+                                           videoData.link || 
+                                           videoData.mp4 || 
+                                           videoData.downloadUrl ||
+                                           videoData.videoUrl ||
+                                           videoData.dlink ||
+                                           videoData.result?.youtube?.dlink;
+                        
+                        // Ambil informasi tambahan
+                        const quality = videoData.quality || 
+                                       videoData.kualitas || 
+                                       videoData.videoQuality || 
+                                       'HD';
+                        
+                        const size = videoData.size || 
+                                    videoData.ukuran || 
+                                    videoData.fileSize || 
+                                    '? MB';
+                        
+                        const duration = videoData.duration || 
+                                        videoData.durasi || 
+                                        videoData.length || 
+                                        '?';
+                        
+                        if (downloadUrl) {
+                            // Tampilkan informasi video dan mulai countdown
+                            statusArea.innerHTML = `
+                                <div class="info-card">
+                                    <div class="info-title">🎬 ${title}</div>
+                                    <div class="info-detail">
+                                        <span>Kualitas: ${quality}</span>
+                                        <span>Ukuran: ${size}</span>
+                                    </div>
+                                    <div class="info-detail">
+                                        <span>Durasi: ${duration}</span>
+                                        <span>Video ID: ${videoId || 'N/A'}</span>
+                                    </div>
+                                </div>
+                            `;
+                            statusArea.className = 'status-area success';
+                            
+                            // Delay 2 detik sebelum membuka tab download
+                            startCountdown(2, '✅ Video siap diunduh!', downloadUrl);
+                            
+                        } else {
+                            throw new Error('Tidak menemukan link download dalam respons. Mencoba format lain...');
+                        }
+                    } else {
+                        // Cek apakah ada error message di berbagai field
+                        const errorMsg = data.error || 
+                                        data.message || 
+                                        data.pesan || 
+                                        data.msg || 
+                                        'Video tidak dapat di-download';
+                        
+                        let suggestion = '';
+                        if (videoId) {
+                            suggestion = `<br><small>Video ID: ${videoId} mungkin memiliki pembatasan (private, age-restricted, atau copyright)</small>`;
+                        }
+                        
+                        statusArea.innerHTML = `
+                            ❌ Gagal: ${errorMsg}${suggestion}
+                            <br><small>Coba link video lain yang lebih publik</small>
+                            <br><small>Pastikan video tidak memiliki pembatasan usia atau hak cipta</small>
+                        `;
+                        statusArea.className = 'status-area error';
+                    }
+                } catch (error) {
+                    console.error('Download error:', error);
+                    statusArea.innerHTML = `
+                        ❌ Gagal: ${error.message}<br>
+                        <small>Coba link lain atau periksa koneksi</small>
+                        <br><small>Jika masalah berlanjut, coba video yang lebih populer</small>
+                    `;
+                    statusArea.className = 'status-area error';
+                } finally {
+                    setTimeout(() => {
+                        downloadBtn.disabled = false;
+                    }, 5000);
+                }
+            }
+
+            // Event listeners
+            pasteBtn.addEventListener('click', pasteFromClipboard);
+            downloadBtn.addEventListener('click', handleDownload);
+
+            linkInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleDownload();
+                }
+            });
+
+            // Cek dukungan clipboard API
+            if (!navigator.clipboard) {
+                pasteBtn.style.opacity = '0.5';
+                pasteBtn.title = 'Clipboard API tidak didukung - gunakan Ctrl+V manual';
+            }
+        })();
+    </script>
+</body>
+</html>
